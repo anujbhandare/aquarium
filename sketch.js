@@ -1,56 +1,52 @@
 let canvas, unit;
-let ground, grass1, rock; // Background assets
-let fishModel, fishTexture; // Player fish assets
+let fishModel, fishTexture;
 let water = [];
-let bubbles = []; // Array for bubbles
-let nolayers = 8;
-let food; // Food (ellipse)
-let randomFishes = []; // Randomly spawned fishes
-let score = 0; // Score counter
+let randomFishes = [];
+let food;
+let score = 0;
 let gameOver = false;
+let startTime;
+let elapsedTime = 0;
+
+// Timer and Score Elements
+const scoreElement = document.getElementById("score");
+const timerElement = document.getElementById("timer");
+const gameOverElement = document.createElement("div");
+gameOverElement.id = "game-over";
+document.body.appendChild(gameOverElement);
 
 // Class for water waves
 class MyWaterwave {
   constructor(i) {
     this.yoff = (i + 1) * 0.1;
-    this.xoff = 0;
     this.waveh = 30 * unit;
   }
 
   render(i) {
-    fill(22, 52, 166, 60); // Blue wave color
+    fill(22, 52, 166, 60);
     noStroke();
     beginShape();
-    this.xoff = 0;
-    for (let x = -550 * unit; x <= 900 * unit; x += 10) {
-      let wavex = x;
-      let wavey = map(
-        noise(this.xoff, this.yoff),
-        0,
-        0.6,
-        height * 0.04,
-        height * 0.05 - (i + 1) * this.waveh
-      );
-      vertex(wavex, wavey + (i + 1) * (this.waveh * 0.75));
-      this.xoff += 0.01;
+    let xoff = 0;
+    for (let x = -300 * unit; x <= 300 * unit; x += 10) {
+      let y = map(noise(xoff, this.yoff), 0, 1, height * 0.05, height * 0.1 - i * this.waveh);
+      vertex(x, y + i * this.waveh * 0.75);
+      xoff += 0.01;
     }
-    this.yoff += 0.005;
-    vertex(950 * unit, height);
-    vertex(-550 * unit, height);
+    this.yoff += 0.01;
+    vertex(300 * unit, height);
+    vertex(-300 * unit, height);
     endShape(CLOSE);
   }
 }
 
-// Class for random fishes
 class RandomFish {
-  constructor(x, y, z) {
-    this.x = x;
-    this.y = y;
-    this.z = z;
+  constructor() {
+    this.x = random(-300, 300);
+    this.y = random(-150, 150);
+    this.z = random(-150, 150);
     this.speedX = random(-1, 1);
     this.speedY = random(-1, 1);
     this.speedZ = random(-1, 1);
-    this.size = 0.5;
   }
 
   move() {
@@ -58,7 +54,6 @@ class RandomFish {
     this.y += this.speedY;
     this.z += this.speedZ;
 
-    // Bounce off aquarium boundaries
     if (this.x < -300 || this.x > 300) this.speedX *= -1;
     if (this.y < -150 || this.y > 150) this.speedY *= -1;
     if (this.z < -150 || this.z > 150) this.speedZ *= -1;
@@ -67,182 +62,119 @@ class RandomFish {
   display() {
     push();
     translate(this.x, this.y, this.z);
-    scale(this.size);
-    rotateY(frameCount * 0.02); // Rotate fish for animation
+    scale(0.5);
+    rotateX(frameCount * 0.01);
+    rotateY(frameCount * 0.01);
+    rotateZ(frameCount * 0.01);
     texture(fishTexture);
     model(fishModel);
     pop();
   }
 }
 
-// Class for food (ellipse)
 class Food {
   constructor() {
     this.x = random(-300, 300);
     this.y = random(-150, 150);
     this.z = 0;
-    this.size = 20;
   }
 
   display() {
     push();
     translate(this.x, this.y, this.z);
-    fill(255, 0, 0); // Red food color
+    fill(255, 0, 0);
     noStroke();
-    ellipse(0, 0, this.size);
+    sphere(10);
     pop();
   }
 
   reposition() {
     this.x = random(-300, 300);
     this.y = random(-150, 150);
-    this.z = 0;
   }
 }
 
 function preload() {
-  fishModel = loadModel('Fish model.obj', true);
-  fishTexture = loadImage('fish-texture.jpg');
-  ground = loadImage('assets/ground.png');
-  grass1 = loadImage('assets/grass1.png');
-  rock = loadImage('assets/rock.png');
+  fishModel = loadModel("Fish model.obj", true);
+  fishTexture = loadImage("fish-texture.jpg");
 }
 
 function setup() {
-  unit = min(windowWidth, windowHeight) / 400;
-  createCanvas(400 * unit, 400 * unit, WEBGL);
-  noCursor(); // Hide the mouse cursor
+  unit = min(windowWidth, windowHeight) / 400; // Adjust scaling based on window size
+  createCanvas(1200, 800, WEBGL); // New canvas size: 800x600
+  noCursor(); 
 
-  // Initialize water waves
-  for (let i = 0; i < nolayers; i++) {
-    water.push(new MyWaterwave(i));
-  }
+  startTime = millis();
 
-  // Initialize food
+  for (let i = 0; i < 8; i++) water.push(new MyWaterwave(i));
   food = new Food();
 }
 
-function draw() {
-  background(50, 150, 200); // Blue background
 
-  // Check game over
+function draw() {
+  background(50, 150, 200);
+
   if (gameOver) {
-    displayGameOver();
+    displayGameOverScreen();
     return;
   }
 
-  // Display score
-  push();
-  translate(-width / 2 + 20, -height / 2 + 20);
-  fill(255);
-  textSize(16);
-  text("Score: " + score, 10, 10);
-  pop();
+  updateTimer();
+  displayScore();
 
-  // Draw water waves
-  for (let i = 0; i < water.length; i++) {
-    water[i].render(i);
-  }
+  for (let i = 0; i < water.length; i++) water[i].render(i);
 
-  // Draw ground, grass, and rocks
-  drawEnvironment();
-
-  // Display food
   food.display();
 
-  // Display random fishes and check collisions
   for (let fish of randomFishes) {
     fish.move();
     fish.display();
-
-    // Check collision with player fish
-    if (checkCollision(playerFishX(), playerFishY(), 0, fish.x, fish.y, fish.z, 40)) {
-      gameOver = true; // Trigger game over
+    if (checkCollision(fish.x, fish.y, fish.z)) {
+      gameOver = true;
     }
   }
 
-  // Render player-controlled fish
   push();
-  translate(playerFishX(), playerFishY(), 0); // Position based on mouse
+  translate(mouseX - width / 2, mouseY - height / 2, 0);
   scale(0.5);
   rotateY(PI / 2);
-  rotateX(-PI);
+  rotateX(-PI );
   texture(fishTexture);
   model(fishModel);
   pop();
 
-  // Check if player fish eats the food
-  if (checkCollision(playerFishX(), playerFishY(), 0, food.x, food.y, food.z, food.size)) {
+  if (checkCollision(food.x, food.y, food.z)) {
     score++;
     food.reposition();
-    spawnRandomFish();
+    randomFishes.push(new RandomFish());
   }
 }
 
-// Helper function to calculate player fish position
-function playerFishX() {
-  return mouseX - width / 2;
+function updateTimer() {
+  elapsedTime = floor((millis() - startTime) / 1000);
+  timerElement.textContent = `Time: ${elapsedTime}s`;
 }
 
-function playerFishY() {
-  return mouseY - height / 2;
+function displayScore() {
+  scoreElement.textContent = `Score: ${score}`;
 }
 
-// Function to draw ground, grass, and rocks
-function drawEnvironment() {
-  // Ground
-  push();
-  translate(0, height * 0.25, -50);
-  texture(ground);
-  plane(400 * unit, 100 * unit);
-  pop();
+function displayGameOverScreen() {
+  gameOverElement.style.display = "block";
+  gameOverElement.innerHTML = `
+    <h1>Game Over</h1>
+    <p>Final Score: ${score}</p>
+    <p>Time Played: ${elapsedTime} seconds</p>
+    <button id="restart-button">Restart</button>
+  `;
 
-  // Grass
-  push();
-  translate(-150 * unit, height * 0.2, 0);
-  image(grass1, -50, -50, 100, 100);
-  pop();
-
-  push();
-  translate(150 * unit, height * 0.2, 0);
-  image(grass1, -50, -50, 100, 100);
-  pop();
-
-  // Rocks
-  push();
-  translate(-100 * unit, height * 0.3, 0);
-  image(rock, -50, -50, 100, 100);
-  pop();
-
-  push();
-  translate(100 * unit, height * 0.3, 0);
-  image(rock, -50, -50, 100, 100);
-  pop();
+  const restartButton = document.getElementById("restart-button");
+  restartButton.addEventListener("click", () => {
+    window.location.reload(); // Refresh the page to restart the game
+  });
 }
 
-// Collision detection in 3D space
-function checkCollision(x1, y1, z1, x2, y2, z2, distance) {
-  let d = dist(x1, y1, z1, x2, y2, z2);
-  return d < distance; // Return true if within collision distance
-}
-
-// Spawn a random fish
-function spawnRandomFish() {
-  let randomFish = new RandomFish(random(-300, 300), random(-150, 150), random(-150, 150));
-  randomFishes.push(randomFish);
-}
-
-// Display game over screen
-function displayGameOver() {
-  push();
-  translate(0, 0, 0);
-  fill(255, 0, 0); // Red text color
-  textSize(32);
-  textAlign(CENTER, CENTER);
-  text("Game Over", 0, -50);
-  textSize(24);
-  text("Final Score: " + score, 0, 0);
-  textSize(16);
-  text("Refresh to Play Again", 0, 50);
-  pop();
+function checkCollision(x, y, z) {
+  let d = dist(mouseX - width / 2, mouseY - height / 2, 0, x, y, z);
+  return d < 30;
 }

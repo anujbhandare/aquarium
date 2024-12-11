@@ -1,7 +1,76 @@
-html, body {
+/* style.css */
+body {
   margin: 0;
   padding: 0;
+  font-family: Arial, sans-serif;
+  background: #fdfdfd; /* Dark ocean color */
+  color: white;
+  overflow: hidden;
 }
-canvas {
-  display: block;
+
+#header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 30px;
+  background: #184c81; /* Lighter blue */
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  position: absolute; /* Change from fixed to absolute */
+  top: 10px; /* Adjust the vertical position */
+  left: 40%; /* Center horizontally */
+  transform: translateX(-50%); /* Align center relative to the canvas */
+  z-index: 100;
+  border-radius: 8px; /* Add rounded corners for styling */
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.5);
+  
+}
+
+#header span {
+  margin: 0 20px; /* Adds 20px of space between score and time */
+}
+#game-container {
+  position: absolute;
+  top: 50px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+#game-over {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 40%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  text-align: center;
+  padding: 20px;
+  border-radius: 10px;
+  font-size: 24px;
+  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+#game-over h1 {
+  margin-bottom: 10px;
+}
+
+#game-over p {
+  margin: 5px 0;
+}
+
+#game-over button {
+  background: #ff5722;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+#game-over button:hover {
+  background: #5b2d1f;
 }
