@@ -134,7 +134,7 @@ function preload() {
 function setup() {
   unit = min(windowWidth, windowHeight) / 400;
   createCanvas(400 * unit, 400 * unit, WEBGL);
-
+  noCursor(); 
   // Initialize water waves
   for (let i = 0; i < nolayers; i++) {
     water.push(new MyWaterwave(i));
@@ -200,7 +200,7 @@ function draw() {
   translate(fishX, fishY, 0);
   scale(0.5);
   rotateY(PI / 2);
-  rotateX(-PI / 2);
+  rotateX(-PI  );
   texture(fishTexture);
   model(fishModel);
   pop();
