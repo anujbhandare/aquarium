@@ -3,17 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>3D Fish Game</title>
+  <title>Final Project: Fish Survival Game</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <header id="title-header">
+    <h1>Final Project: Fish Survival Game</h1>
+    <p>Team Members:</p>
+    <ul>
+      <li>M Kalyan Kumar</li>
+      <li>B Anuj</li>
+    </ul>
+  </header>
+  
   <div id="header">
     <span id="score">Score: 0</span>
     <span id="timer">Time: 0s</span>
   </div>
+  
   <div id="game-container">
+    <!-- Canvas is automatically created by p5.js -->
     <script src="p5.js"></script>
     <script src="sketch.js"></script>
   </div>
+  
+  <footer id="description">
+    <h2>Game Description</h2>
+    <p>
+      This game is set in a 3D aquarium, where the player controls a fish using the mouse.
+      The objective is to eat food that appears randomly in the aquarium. Each time the
+      fish eats, a new fish is born and starts moving randomly. If the player-controlled
+      fish touches any of these randomly moving fish, the game ends. The score is
+      determined by the number of food pieces eaten before the game ends.
+    </p>
+  </footer>
 </body>
 </html>
